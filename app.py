@@ -60,6 +60,8 @@ def order_details():
             })
         else:
             return jsonify({'error': 'Order does not exist'})
+    else:
+        return jsonify({'error': 'Invalid token'})
 
 
 if __name__ == '__main__':
