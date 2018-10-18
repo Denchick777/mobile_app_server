@@ -129,5 +129,15 @@ def order_details():
         return jsonify({'error': 'Invalid token'})
 
 
+@app.route('/order/accept_order', methods=['POST'])
+def accept_order():
+    pass  # TODO
+
+
+@app.route('/order/dismiss_order', methods=['POST'])
+def dismiss_order():
+    pass  # TODO
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port='5321')
