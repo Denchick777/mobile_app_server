@@ -108,7 +108,8 @@ def assigned_orders():
         try:
             return jsonify([
                 el for el in ORDERS
-                if el['order_id'] in ASSIGNED_ORDERS[request.json['login']]])
+                if el['order_id'] in ASSIGNED_ORDERS[request.json['login']]
+            ])
         except KeyError:
             return jsonify([])
     else:
@@ -131,12 +132,12 @@ def order_details():
 
 @app.route('/order/accept_order', methods=['POST'])
 def accept_order():
-    pass  # TODO
+    return jsonify({'error': 'Not implemented yet'})  # TODO
 
 
 @app.route('/order/dismiss_order', methods=['POST'])
 def dismiss_order():
-    pass  # TODO
+    return jsonify({'error': 'Not implemented yet'})  # TODO
 
 
 if __name__ == '__main__':
