@@ -182,6 +182,7 @@ def try_order_accept(header, data):
             ORDERS[i]['assigned_to'] = _get_login_by_token(token)
             ORDERS[i]['state_code'] = '1'
             break
+        i += 1
     if i == len(ORDERS):
         return _err_dict('Order with given ID does not exist')
     return {}  # TODO
