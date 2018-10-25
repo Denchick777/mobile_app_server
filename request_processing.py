@@ -177,9 +177,10 @@ def try_order_accept(header, data):
     i = 0  # TODO
     while i < len(ORDERS):
         if ORDERS[i]['order_id'] == order_id:
-            if ORDERS[i]['state_code'] == 1:
+            if ORDERS[i]['state_code'] == '0':
                 return _err_dict('Given order is already accepted')
             ORDERS[i]['assigned_to'] = _get_login_by_token(token)
+            ORDERS[i]['state_code'] = '1'
             break
     if i == len(ORDERS):
         return _err_dict('Order with given ID does not exist')
