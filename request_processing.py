@@ -122,20 +122,32 @@ def try_login(data):
         return _err_dict('Invalid authentication data')
 
 
-def get_available_orders(token):
+def get_available_orders(header):
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
     if not _is_valid_token(token):
         return _err_dict('Invalid token')
     return [el for el in ORDERS if not el['assigned_to']]  # TODO
 
 
-def get_assigned_orders(token):
+def get_assigned_orders(header):
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
     if not _is_valid_token(token):
         return _err_dict('Invalid token')
     login = _get_login_by_token(token)
     return [el for el in ORDERS if el['assigned_to'] == login]  # TODO
 
 
-def get_order_details(token, data):
+def get_order_details(header, data):
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
     if not _is_valid_token(token):
         return _err_dict('Invalid token')
     try:
@@ -151,7 +163,11 @@ def get_order_details(token, data):
         return _err_dict('Order with given ID does not exist')
 
 
-def try_order_accept(token, data):
+def try_order_accept(header, data):
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
     if not _is_valid_token(token):
         return _err_dict('Invalid token')
     try:
@@ -168,7 +184,11 @@ def try_order_accept(token, data):
     return {}  # TODO
 
 
-def try_order_pick(token, data):
+def try_order_pick(header, data):
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
     if not _is_valid_token(token):
         return _err_dict('Invalid token')
     try:
@@ -181,7 +201,11 @@ def try_order_pick(token, data):
     return {}  # TODO
 
 
-def try_validate_customer(token, data):
+def try_validate_customer(header, data):
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
     if not _is_valid_token(token):
         return _err_dict('Invalid token')
     try:
@@ -193,7 +217,11 @@ def try_validate_customer(token, data):
     return {}  # TODO
 
 
-def try_order_deliver(token, data):
+def try_order_deliver(header, data):
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
     if not _is_valid_token(token):
         return _err_dict('Invalid token')
     try:
@@ -206,7 +234,11 @@ def try_order_deliver(token, data):
     return {}  # TODO
 
 
-def try_order_cancel(token, data):
+def try_order_cancel(header, data):
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
     if not _is_valid_token(token):
         return _err_dict('Invalid token')
     try:
@@ -218,7 +250,11 @@ def try_order_cancel(token, data):
     return {}  # TODO
 
 
-def try_location_update(token, data):
+def try_location_update(header, data):
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
     if not _is_valid_token(token):
         return _err_dict('Invalid token')
     try:
