@@ -19,13 +19,23 @@ def configure_db():
     """
     Initialize server's PostgreSQL database from the scratch using configuration data.
     """
-    with postgresql.open('pq://{}:{}@localhost:5432'.format(
-            'postgres', 'postgres')) as db:
-        db.execute(  # 'DROP DATABASE IF EXISTS {0};'
-                   'CREATE DATABASE {0};'
-                   "CREATE USER {1} WITH password '{2}';"
-                   'GRANT ALL ON DATABASE {0} TO {1};'
-                   .format(DB_NAME, USER_NAME, USER_PASS))
+    try:
+        postgresql.open('pq://{}:{}@localhost:5432/{}'.format(
+            USER_NAME, USER_PASS, DB_NAME))
+    except postgresql.exceptions.ClientCannotConnectError:
+        print('Database is unreachable! Trying to initialize it from scratch...')
+        try:
+            with postgresql.open('pq://{}:{}@localhost:5432'.format(
+                    'postgres', POSTGRES_PASS)) as db:
+                db.execute('CREATE DATABASE {0};'.format(DB_NAME))
+                db.execute("CREATE USER {1} WITH password '{2}';"
+                           'GRANT ALL ON DATABASE {0} TO {1};'
+                           .format(DB_NAME, USER_NAME, USER_PASS))
+        except postgresql.exceptions.ClientCannotConnectError:
+            print('Unable to create database!\n'
+                  'Check if PostgreSQL is running and configurations are correct\n'
+                  'Terminating application...')
+            exit(1)
 
     with postgresql.open('pq://{}:{}@localhost:5432/{}'.format(
             USER_NAME, USER_PASS, DB_NAME)) as db:
