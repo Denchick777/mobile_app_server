@@ -154,7 +154,7 @@ def pick_order(header, data):
 
 def validate_customer(header, data):
     """
-    TODO description.
+    Make request for customer validation key creation while trying to end delivery.
     :param header: Dictionary with `token` field
     :param data: Dictionary with `order_id` field
     :return: Empty dictionary in case of success or dictionary with `error` field otherwise
@@ -244,6 +244,21 @@ def update_location(header, data):
         return dc.try_update_location(login, location)
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
+
+
+def get_support_phone_number(header):
+    """
+    Get support service's phone number.
+    :param header: Dictionary with `token` field
+    :return: Dictionary with `number` field containing support service's phone number or `error`
+    """
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
+    if not is_valid_token(token):
+        return _err_dict('Invalid token')
+    return {'number': '+7 (800) 555-35-35'}  # TODO actual data
 
 
 def plug_reset():  # TODO remove

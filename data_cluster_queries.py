@@ -119,7 +119,10 @@ def _ask_data_cluster(query_name, data):
     res = requests.post(f'{CLUSTER_ADDRESS}/{query_name}', data=data_json, headers=headers)
     if not res.ok:
         raise DataClusterQueryFailure('Data cluster responded with an error code')
-    return res.json()
+    try:
+        return res.json()
+    except json.decoder.JSONDecodeError:
+        raise DataClusterQueryFailure('Data cluster returned non-JSON response')
 
 
 def try_authorize(login, password_hash):

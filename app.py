@@ -62,6 +62,11 @@ def location_update():
     return jsonify(rp.update_location(request.headers, request.json))
 
 
+@app.route('/support/call', methods=['POST'])
+def call_support():
+    return jsonify(rp.get_support_phone_number(request.headers))
+
+
 @app.route('/plug_reset', methods=['POST'])
 def plug_reset():  # TODO remove
     return jsonify(rp.plug_reset())
