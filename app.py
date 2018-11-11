@@ -73,5 +73,5 @@ def plug_reset():  # TODO remove
 
 
 if __name__ == '__main__':
-    # local_db.configure_db()
+    local_db.configure_db()
     app.run(host='0.0.0.0', port=configs['SERVER_PORT'])
