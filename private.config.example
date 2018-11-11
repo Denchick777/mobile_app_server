@@ -1,5 +1,6 @@
 SERVER_PORT=5321
 CLUSTER_ADDRESS=[Data cluster address like (w/o quotes): 'http://127.0.0.1:5000']
+POSTGRES_PASS=[Password assigned during installation of PostgreSQL]
 DB_NAME=your_local_db_name
 USER_NAME=your_new_user_s_name
 USER_PASS=your_new_user_s_access_password

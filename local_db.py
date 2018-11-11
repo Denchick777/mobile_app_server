@@ -7,6 +7,7 @@ import postgresql
 
 from local_config import configs
 
+POSTGRES_PASS = configs['POSTGRES_PASS']
 DB_NAME = configs['DB_NAME']
 USER_NAME = configs['USER_NAME']
 USER_PASS = configs['USER_PASS']
@@ -28,7 +29,7 @@ def configure_db():
 
     with postgresql.open('pq://{}:{}@localhost:5432/{}'.format(
             USER_NAME, USER_PASS, DB_NAME)) as db:
-        pass
+        pass  # TODO schema creation
 
 
 def store_user_auth(login, role_id):

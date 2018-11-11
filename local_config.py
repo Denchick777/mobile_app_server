@@ -17,5 +17,6 @@ with open('private.config') as conf_file:
             print(f'Error at line {i} while parsing config file!')
             failed = True
 if failed:
-    print('Execution stops because of corrupted configuration info')
+    print('Cannot read configuration info!\n'
+          'Application terminating...')
     exit(1)
