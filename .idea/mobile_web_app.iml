@@ -8,7 +8,7 @@
       <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
     </content>
-    <orderEntry type="jdk" jdkName="Remote Python 2.7.15rc1 (sftp://ubuntu@ec2-34-253-159-180.eu-west-1.compute.amazonaws.com:22/usr/bin/python)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.6 (dj_serv)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TemplatesService">

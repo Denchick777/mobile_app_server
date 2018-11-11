@@ -1,114 +1,31 @@
-ORDERS = [
-    {
-        'order_id': '1',
-        'title': 'string',
-        'weight': 'string',
-        'dimensions': 'string',
-        'state_code': '0',
-        'state': 'awaiting delivery',
-        'order_type': 'tbd',
-        'warehouse_address': 'string',
-        'recipient_address': 'string',
-        'warehouse_id': 'string',
-        'warehouse_location': '55.753320;48.741012',
-        'recipient_location': '55.817458;49.130425',
-        'delivery_time_from': 'string in some datetime format',
-        'delivery_time_to': 'string in some datetime format',
-        'recipient_phone': 'string in some phone format',
-        'recipient_name': 'string',
-        'assigned_to': None,
-    },
-    {
-        'order_id': '2',
-        'title': 'string',
-        'weight': 'string',
-        'dimensions': 'string',
-        'state_code': '0',
-        'state': 'awaiting delivery',
-        'order_type': 'tbd',
-        'warehouse_address': 'string',
-        'recipient_address': 'string',
-        'warehouse_id': 'string',
-        'warehouse_location': '55.753320;48.741012',
-        'recipient_location': '55.817458;49.130425',
-        'delivery_time_from': 'string in some datetime format',
-        'delivery_time_to': 'string in some datetime format',
-        'recipient_phone': 'string in some phone format',
-        'recipient_name': 'string',
-        'assigned_to': None,
-    },
-    {
-        'order_id': '3',
-        'title': 'string',
-        'weight': 'string',
-        'dimensions': 'string',
-        'state_code': '1',
-        'state': 'awaiting delivery',
-        'order_type': 'tbd',
-        'warehouse_address': 'string',
-        'recipient_address': 'string',
-        'warehouse_id': 'string',
-        'warehouse_location': '55.753320;48.741012',
-        'recipient_location': '55.817458;49.130425',
-        'delivery_time_from': 'string in some datetime format',
-        'delivery_time_to': 'string in some datetime format',
-        'recipient_phone': 'string in some phone format',
-        'recipient_name': 'string',
-        'assigned_to': 'abc',
-    },
-    {
-        'order_id': '4',
-        'title': 'string',
-        'weight': 'string',
-        'dimensions': 'string',
-        'state_code': '1',
-        'state': 'awaiting delivery',
-        'order_type': 'tbd',
-        'warehouse_address': 'string',
-        'recipient_address': 'string',
-        'warehouse_id': 'string',
-        'warehouse_location': '55.753320;48.741012',
-        'recipient_location': '55.817458;49.130425',
-        'delivery_time_from': 'string in some datetime format',
-        'delivery_time_to': 'string in some datetime format',
-        'recipient_phone': 'string in some phone format',
-        'recipient_name': 'string',
-        'assigned_to': 'abc',
-    },
-]
+"""
+Request bodies for server application.
+:author: Denis Chernikov
+"""
+
+import data_cluster_queries as dc
+from data_cluster_queries import DataClusterQueryFailure
+from local_db import *
+
+# IDs of roles in data cluster
+# 7 - truckDriver
+# 8 - deliveryOperator
+ALLOWED_ROLES = [7, 8]
 
 
 def _err_dict(label):
+    """
+    Construct a dictionary with an error message.
+    :param label: Label to assign as error message
+    :return: Dictionary with single field called `error`
+    """
     return {'error': label}
-
-
-def _are_valid_credentials(login, password_hash):
-    """
-    Ask data cluster if given authentication pair is correct
-    and belongs to the correct user.
-    :param login: Login of user that tries to log in
-    :param password_hash: User password's hash
-    :return: `True' - there is a user with given credentials
-    """
-    return login == 'abc' and password_hash == '123'  # TODO actual request
-
-
-def _generate_token(login):
-    return 'new_access_token'  # TODO
-
-
-def _is_valid_token(token):
-    return token == 'new_access_token'  # TODO
-
-
-def _get_login_by_token(token):
-    return 'abc'  # TODO
 
 
 def try_login(data):
     """
     Try to login with given credentials or give an error response.
-    :param data: Dictionary with `login` and `password_hash`
+    :param data: Dictionary with `login` and `password_hash` fields
     :return: Dictionary with `token` of authenticated user or `error`
     """
     try:
@@ -116,155 +33,226 @@ def try_login(data):
         password_hash = data['password_hash']
     except KeyError:
         return _err_dict('Required field(s) missed')
-    if _are_valid_credentials(login, password_hash):
-        return {'token': _generate_token(login)}
+    try:
+        role_id = dc.try_authorize(login, password_hash)
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))
+    if role_id and role_id in ALLOWED_ROLES:
+        token = store_user_auth(login, role_id)
+        return {'token': token}
     else:
         return _err_dict('Invalid authentication data')
 
 
 def get_available_orders(header):
+    """
+    Get a list of all unassigned orders.
+    :param header: Dictionary with `token` field
+    :return: List of dictionaries of all unassigned orders (reduced order info) or `error`
+    """
     try:
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not _is_valid_token(token):
+    if not is_valid_token(token):
         return _err_dict('Invalid token')
-    return [el for el in ORDERS if not el['assigned_to']]  # TODO
+    try:
+        return dc.get_available_orders()
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))
 
 
 def get_assigned_orders(header):
+    """
+    Get a list of all orders assigned to the specified user.
+    :param header: Dictionary with `token` field
+    :return: List of dictionaries of all orders of a given user (reduced order info) or `error`
+    """
     try:
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not _is_valid_token(token):
+    if not is_valid_token(token):
         return _err_dict('Invalid token')
-    login = _get_login_by_token(token)
-    return [el for el in ORDERS if el['assigned_to'] == login]  # TODO
+    login = get_login_by_token(token)
+    try:
+        return dc.get_assigned_orders(login)
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))
 
 
 def get_order_details(header, data):
+    """
+    Get all the details about the specified order.
+    :param header: Dictionary with `token` field
+    :param data: Dictionary with `order_id` field
+    :return: Dictionary with full info about the given order or `error`
+    """
     try:
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not _is_valid_token(token):
+    if not is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
     except KeyError:
         return _err_dict('Required field missed')
-    try:  # TODO
-        return next(
-            el for el in ORDERS
-            if el['order_id'] == order_id
-        )
-    except StopIteration:
-        return _err_dict('Order with given ID does not exist')
+    try:
+        return dc.get_order_details(order_id)
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))
 
 
-def try_order_accept(header, data):
+def accept_order(header, data):
+    """
+    Set the state of a given order as accepted to the given user.
+    :param header: Dictionary with `token` field
+    :param data: Dictionary with `order_id` field
+    :return: Empty dictionary in case of success or dictionary with `error` field otherwise
+    """
     try:
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not _is_valid_token(token):
+    if not is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
     except KeyError:
         return _err_dict('Required field missed')
-    i = 0  # TODO
-    while i < len(ORDERS):
-        if ORDERS[i]['order_id'] == order_id:
-            if ORDERS[i]['state_code'] == '1':
-                return _err_dict('Given order is already accepted')
-            ORDERS[i]['assigned_to'] = _get_login_by_token(token)
-            ORDERS[i]['state_code'] = '1'
-            break
-        i += 1
-    if i == len(ORDERS):
-        return _err_dict('Order with given ID does not exist')
-    return {}  # TODO
+    login = get_login_by_token(token)
+    try:
+        return dc.try_order_accept(login, order_id)
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))
 
 
-def try_order_pick(header, data):
+def pick_order(header, data):
+    """
+    Set the state of a given order as picked using given validation key.
+    :param header: Dictionary with `token` field
+    :param data: Dictionary with `order_id` and `key` fields
+    :return: Empty dictionary in case of success or dictionary with `error` field otherwise
+    """
     try:
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not _is_valid_token(token):
+    if not is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
         key = data['key']
     except KeyError:
         return _err_dict('Required field(s) missed')
-    if False:  # TODO
-        return _err_dict('Order picking failed')
-    return {}  # TODO
+    try:
+        return dc.try_pick_order(order_id, key)
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))
 
 
-def try_validate_customer(header, data):
+def validate_customer(header, data):
+    """
+    TODO description.
+    :param header: Dictionary with `token` field
+    :param data: Dictionary with `order_id` field
+    :return: Empty dictionary in case of success or dictionary with `error` field otherwise
+    """
     try:
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not _is_valid_token(token):
+    if not is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
     except KeyError:
         return _err_dict('Required field missed')
-    if False:  # TODO
-        return _err_dict('Customer validation failed')
-    return {}  # TODO
+    try:
+        return dc.try_validate_customer(order_id)
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))
 
 
-def try_order_deliver(header, data):
+def deliver_order(header, data):
+    """
+    Set the state of a given order as delivered using given validation key.
+    :param header: Dictionary with `token` field
+    :param data: Dictionary with `order_id` and `key` fields
+    :return: Empty dictionary in case of success or dictionary with `error` field otherwise
+    """
     try:
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not _is_valid_token(token):
+    if not is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
         key = data['key']
     except KeyError:
         return _err_dict('Required field(s) missed')
-    if False:  # TODO
-        return _err_dict('Order deliver try failed')
-    return {}  # TODO
+    try:
+        return dc.try_deliver_order(order_id, key)
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))
 
 
-def try_order_cancel(header, data):
+def cancel_order(header, data):
+    """
+    Set the state of a given order as cancelled.
+    :param header: Dictionary with `token` field
+    :param data: Dictionary with `order_id` field
+    :return: Empty dictionary in case of success or dictionary with `error` field otherwise
+    """
     try:
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not _is_valid_token(token):
+    if not is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
     except KeyError:
         return _err_dict('Required field missed')
-    if False:  # TODO
-        return _err_dict('Order cancellation failed')
-    return {}  # TODO
+    try:
+        return dc.try_cancel_order(order_id)
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))
 
 
-def try_location_update(header, data):
+def update_location(header, data):
+    """
+    Update geographical coordinates of a given user for the whole system.
+    :param header: Dictionary with `token` field
+    :param data: Dictionary with `location` field
+    :return: Empty dictionary in case of success or dictionary with `error` field otherwise
+    """
     try:
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not _is_valid_token(token):
+    if not is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         location = data['location']
     except KeyError:
         return _err_dict('Required field missed')
-    if False:  # TODO
-        return _err_dict('Location update failed')
-    return {}  # TODO
+    login = get_login_by_token(token)
+    try:
+        return dc.try_update_location(login, location)
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))
+
+
+def plug_reset():  # TODO remove
+    """
+    DEBUG FEATURE.
+    Reset some fields for testing purposes.
+    :return: Empty dictionary in case of success or dictionary with `error` field otherwise
+    """
+    try:
+        return dc.plug_reset()
+    except DataClusterQueryFailure as e:
+        return _err_dict(str(e))

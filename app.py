@@ -1,8 +1,15 @@
+"""
+Server application core, implementing request interface using Flask.
+:author: Denis Chernikov
+"""
+
 from flask import Flask, jsonify, request
 
+from local_config import configs
+import local_db
 import request_processing as rp
 
-app = Flask(__name__)
+app = Flask(__name__)  # Initialize Flask application
 
 
 @app.route('/login', methods=['POST'])
@@ -27,33 +34,39 @@ def order_details():
 
 @app.route('/order/accept', methods=['POST'])
 def order_accept():
-    return jsonify(rp.try_order_accept(request.headers, request.json))
+    return jsonify(rp.accept_order(request.headers, request.json))
 
 
 @app.route('/order/pick', methods=['POST'])
 def order_pick():
-    return jsonify(rp.try_order_pick(request.headers, request.json))
+    return jsonify(rp.pick_order(request.headers, request.json))
 
 
 @app.route('/order/validate_customer', methods=['POST'])
 def order_validate_customer():
-    return jsonify(rp.try_validate_customer(request.headers, request.json))
+    return jsonify(rp.validate_customer(request.headers, request.json))
 
 
 @app.route('/order/deliver', methods=['POST'])
 def order_deliver():
-    return jsonify(rp.try_order_deliver(request.headers, request.json))
+    return jsonify(rp.deliver_order(request.headers, request.json))
 
 
 @app.route('/order/cancel', methods=['POST'])
 def order_cancel():
-    return jsonify(rp.try_order_cancel(request.headers, request.json))
+    return jsonify(rp.cancel_order(request.headers, request.json))
 
 
 @app.route('/location/update', methods=['POST'])
 def location_update():
-    return jsonify(rp.try_location_update(request.headers, request.json))
+    return jsonify(rp.update_location(request.headers, request.json))
+
+
+@app.route('/plug_reset', methods=['POST'])
+def plug_reset():  # TODO remove
+    return jsonify(rp.plug_reset())
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port='5321')
+    # local_db.configure_db()
+    app.run(host='0.0.0.0', port=configs['SERVER_PORT'])
