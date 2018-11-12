@@ -27,7 +27,7 @@ def configure_db():
         print('Database is unreachable! Trying to initialize it from scratch...')
         try:
             with postgresql.open(
-                    'pq://{}:{}@localhost:5432'.format('postgres', POSTGRES_PASS)
+                'pq://{}:{}@localhost:5432'.format('postgres', POSTGRES_PASS)
             ) as db:
                 db.execute(
                     'DROP USER IF EXISTS {0};'
@@ -50,12 +50,17 @@ def configure_db():
             )
             exit(1)
 
-    with postgresql.open(
+        with postgresql.open(
             'pq://{}:{}@localhost:5432/{}'.format(USER_NAME, USER_PASS, DB_NAME)
-    ) as db:
-        db.execute(
-            ''  # TODO schema
-        )
+        ) as db:
+            db.execute(
+                'CREATE TABLE sessions ('
+                ' id SERIAL PRIMARY KEY,'
+                ' token CHAR(64),'
+                ' login CHAR(64),'
+                ' role_id INTEGER'
+                ');'
+            )
 
 
 def _generate_token(user_name):
@@ -101,7 +106,3 @@ def get_login_by_token(token):
     :return: `login` associated with a given token
     """
     return TEMP_DB[token]['login']
-
-
-if __name__ == '__main__':
-    configure_db()

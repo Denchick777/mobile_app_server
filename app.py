@@ -6,7 +6,7 @@ Server application core, implementing request interface using Flask.
 from flask import Flask, jsonify, request
 
 from local_config import configs
-import local_db
+from local_db import configure_db
 import request_processing as rp
 
 app = Flask(__name__)
@@ -73,5 +73,5 @@ def plug_reset():  # TODO remove
 
 
 if __name__ == '__main__':
-    local_db.configure_db()
+    configure_db()
     app.run(host='0.0.0.0', port=configs['SERVER_PORT'])
