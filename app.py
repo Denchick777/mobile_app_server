@@ -9,7 +9,7 @@ from local_config import configs
 from local_db import configure_db
 import request_processing as rp
 
-app = Flask(__name__)
+app = Flask('mobile_server_app')
 
 
 @app.route('/login', methods=['POST'])
