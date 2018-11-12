@@ -12,15 +12,16 @@ DB_NAME = configs['DB_NAME']
 USER_NAME = configs['USER_NAME']
 USER_PASS = configs['USER_PASS']
 
-TEMP_DB = {}  # TODO remove
+DB_CONN = None
 
 
 def configure_db():
     """
     Initialize server's PostgreSQL database from the scratch using configuration data.
     """
+    global DB_CONN
     try:
-        postgresql.open(
+        DB_CONN = postgresql.open(
             'pq://{}:{}@localhost:5432/{}'.format(USER_NAME, USER_PASS, DB_NAME)
         )
     except postgresql.exceptions.ClientCannotConnectError:
@@ -59,8 +60,12 @@ def configure_db():
                 ' token CHAR(64),'
                 ' login CHAR(64),'
                 ' role_id INTEGER'
+                # TODO TTL
                 ');'
             )
+        DB_CONN = postgresql.open(
+            'pq://{}:{}@localhost:5432/{}'.format(USER_NAME, USER_PASS, DB_NAME)
+        )
 
 
 def _generate_token(user_name):
@@ -81,11 +86,12 @@ def store_user_auth(login, role_id):
     :param role_id: `role_id` associated with given user
     :return: New token entry to be used within new session
     """
+    assert DB_CONN
     token = _generate_token(login)
-    TEMP_DB[token] = {}
-    TEMP_DB[token]['login'] = login
-    TEMP_DB[token]['role_id'] = role_id
-    # TODO TTL
+    req = DB_CONN.prepare(  # TODO TTL
+        'INSERT INTO sessions (token, login, role_id) VALUES ($1, $2, $3);'
+    )
+    req(token, login, role_id)
     return token
 
 
@@ -95,8 +101,12 @@ def is_valid_token(token):
     :param token: Token to check validity of
     :return: `true` - it is valid and up-to-date, `false` - otherwise
     """
-    # TODO TTL
-    return token in TEMP_DB.keys()
+    assert DB_CONN
+    req = DB_CONN.prepare(  # TODO TTL
+        'SELECT exists (SELECT 1 FROM sessions WHERE token = $1 LIMIT 1);'
+    )
+    res = req(token)
+    return res[0][0]
 
 
 def get_login_by_token(token):
@@ -105,4 +115,9 @@ def get_login_by_token(token):
     :param token: Token to search user by
     :return: `login` associated with a given token
     """
-    return TEMP_DB[token]['login']
+    assert DB_CONN
+    req = DB_CONN.prepare(  # TODO TTL
+        'SELECT login FROM (SELECT login FROM sessions WHERE token = $1 LIMIT 1) AS res;'
+    )
+    res = req(token)
+    return res[0][0].strip()
