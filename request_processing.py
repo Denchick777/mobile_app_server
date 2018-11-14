@@ -4,7 +4,6 @@ Request bodies for server application.
 """
 
 import data_cluster_queries as dc
-from data_cluster_queries import DataClusterQueryFailure
 import local_db as ldb
 
 # IDs of roles in data cluster
@@ -35,7 +34,7 @@ def try_login(data):
         return _err_dict('Required field(s) missed')
     try:
         role_id = dc.try_authorize(login, password_hash)
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     if role_id and role_id in ALLOWED_ROLES:
         token = ldb.store_user_auth(login, role_id)
@@ -58,7 +57,7 @@ def get_available_orders(header):
         return _err_dict('Invalid token')
     try:
         orders = dc.get_available_orders()
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return orders
 
@@ -81,7 +80,7 @@ def get_assigned_orders(header):
         return _err_dict(str(e))
     try:
         orders = dc.get_assigned_orders(login)
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return orders
 
@@ -105,7 +104,7 @@ def get_order_details(header, data):
         return _err_dict('Required field missed')
     try:
         order = dc.get_order_details(order_id)
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return order
 
@@ -130,7 +129,7 @@ def accept_order(header, data):
     login = ldb.get_login_by_token(token)
     try:
         dc.try_order_accept(login, order_id)
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return {}
 
@@ -155,7 +154,7 @@ def pick_order(header, data):
         return _err_dict('Required field(s) missed')
     try:
         dc.try_pick_order(order_id, key)
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return {}
 
@@ -179,7 +178,7 @@ def validate_customer(header, data):
         return _err_dict('Required field missed')
     try:
         dc.try_validate_customer(order_id)
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return {}
 
@@ -204,7 +203,7 @@ def deliver_order(header, data):
         return _err_dict('Required field(s) missed')
     try:
         dc.try_deliver_order(order_id, key)
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return {}
 
@@ -228,7 +227,7 @@ def cancel_order(header, data):
         return _err_dict('Required field missed')
     try:
         dc.try_cancel_order(order_id)
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return {}
 
@@ -253,7 +252,7 @@ def update_location(header, data):
     login = ldb.get_login_by_token(token)
     try:
         dc.try_update_location(login, location)
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return {}
 
@@ -300,5 +299,5 @@ def plug_reset():  # TODO remove
     """
     try:
         return dc.plug_reset()
-    except DataClusterQueryFailure as e:
+    except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
