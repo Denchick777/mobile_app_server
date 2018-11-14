@@ -5,7 +5,7 @@ Request bodies for server application.
 
 import data_cluster_queries as dc
 from data_cluster_queries import DataClusterQueryFailure
-from local_db import *
+import local_db as ldb
 
 # IDs of roles in data cluster
 # 7 - truckDriver
@@ -38,10 +38,10 @@ def try_login(data):
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
     if role_id and role_id in ALLOWED_ROLES:
-        token = store_user_auth(login, role_id)
-        return {'token': token}
+        token = ldb.store_user_auth(login, role_id)
     else:
         return _err_dict('Invalid authentication data')
+    return {'token': token}
 
 
 def get_available_orders(header):
@@ -54,12 +54,13 @@ def get_available_orders(header):
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not is_valid_token(token):
+    if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
     try:
-        return dc.get_available_orders()
+        orders = dc.get_available_orders()
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
+    return orders
 
 
 def get_assigned_orders(header):
@@ -72,13 +73,17 @@ def get_assigned_orders(header):
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not is_valid_token(token):
+    if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
-    login = get_login_by_token(token)
     try:
-        return dc.get_assigned_orders(login)
+        login = ldb.get_login_by_token(token)
+    except ldb.LocalDBQueryFailure as e:
+        return _err_dict(str(e))
+    try:
+        orders = dc.get_assigned_orders(login)
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
+    return orders
 
 
 def get_order_details(header, data):
@@ -92,16 +97,17 @@ def get_order_details(header, data):
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not is_valid_token(token):
+    if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
     except KeyError:
         return _err_dict('Required field missed')
     try:
-        return dc.get_order_details(order_id)
+        order = dc.get_order_details(order_id)
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
+    return order
 
 
 def accept_order(header, data):
@@ -115,17 +121,18 @@ def accept_order(header, data):
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not is_valid_token(token):
+    if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
     except KeyError:
         return _err_dict('Required field missed')
-    login = get_login_by_token(token)
+    login = ldb.get_login_by_token(token)
     try:
-        return dc.try_order_accept(login, order_id)
+        dc.try_order_accept(login, order_id)
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
+    return {}
 
 
 def pick_order(header, data):
@@ -139,7 +146,7 @@ def pick_order(header, data):
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not is_valid_token(token):
+    if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
@@ -147,9 +154,10 @@ def pick_order(header, data):
     except KeyError:
         return _err_dict('Required field(s) missed')
     try:
-        return dc.try_pick_order(order_id, key)
+        dc.try_pick_order(order_id, key)
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
+    return {}
 
 
 def validate_customer(header, data):
@@ -163,16 +171,17 @@ def validate_customer(header, data):
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not is_valid_token(token):
+    if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
     except KeyError:
         return _err_dict('Required field missed')
     try:
-        return dc.try_validate_customer(order_id)
+        dc.try_validate_customer(order_id)
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
+    return {}
 
 
 def deliver_order(header, data):
@@ -186,7 +195,7 @@ def deliver_order(header, data):
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not is_valid_token(token):
+    if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
@@ -194,9 +203,10 @@ def deliver_order(header, data):
     except KeyError:
         return _err_dict('Required field(s) missed')
     try:
-        return dc.try_deliver_order(order_id, key)
+        dc.try_deliver_order(order_id, key)
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
+    return {}
 
 
 def cancel_order(header, data):
@@ -210,16 +220,17 @@ def cancel_order(header, data):
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not is_valid_token(token):
+    if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         order_id = data['order_id']
     except KeyError:
         return _err_dict('Required field missed')
     try:
-        return dc.try_cancel_order(order_id)
+        dc.try_cancel_order(order_id)
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
+    return {}
 
 
 def update_location(header, data):
@@ -233,17 +244,18 @@ def update_location(header, data):
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not is_valid_token(token):
+    if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
     try:
         location = data['location']
     except KeyError:
         return _err_dict('Required field missed')
-    login = get_login_by_token(token)
+    login = ldb.get_login_by_token(token)
     try:
-        return dc.try_update_location(login, location)
+        dc.try_update_location(login, location)
     except DataClusterQueryFailure as e:
         return _err_dict(str(e))
+    return {}
 
 
 def get_support_phone_number(header):
@@ -256,9 +268,28 @@ def get_support_phone_number(header):
         token = header['token']
     except KeyError:
         return _err_dict('Token is missing')
-    if not is_valid_token(token):
+    if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
     return {'number': '+7 (800) 555-35-35'}  # TODO actual data
+
+
+def logout(header):
+    """
+    Close the session associated with a given token.
+    :param header: Dictionary with `token` field
+    :return: Empty dictionary in case of success or dictionary with `error` field otherwise
+    """
+    try:
+        token = header['token']
+    except KeyError:
+        return _err_dict('Token is missing')
+    if not ldb.is_valid_token(token):
+        return _err_dict('Invalid token')
+    try:
+        ldb.remove_token(token)
+    except ldb.LocalDBQueryFailure as e:
+        return _err_dict(e)
+    return {}
 
 
 def plug_reset():  # TODO remove

@@ -67,6 +67,11 @@ def call_support():
     return jsonify(rp.get_support_phone_number(request.headers))
 
 
+@app.route('/logout', methods=['POST'])
+def logout():
+    return jsonify(rp.logout(request.headers))
+
+
 @app.route('/plug_reset', methods=['POST'])
 def plug_reset():  # TODO remove
     return jsonify(rp.plug_reset())

@@ -3,6 +3,7 @@ Local database interface for server application.
 :author: Denis Chernikov
 """
 
+import atexit
 import postgresql
 
 from local_config import configs
@@ -13,6 +14,22 @@ USER_NAME = configs['USER_NAME']
 USER_PASS = configs['USER_PASS']
 
 DB_CONN = None
+
+
+class LocalDBQueryFailure(Exception):
+    """
+    Exception for cases of failed local database query try.
+    """
+    def __init__(self, message):
+        """
+        Initialize local database query failure exception with given content.
+        :param message: Message to store in this exception
+        """
+        super(LocalDBQueryFailure, self).__init__(message)
+        self.message = message
+
+    def __str__(self):
+        return self.message
 
 
 def configure_db():
@@ -36,7 +53,7 @@ def configure_db():
                     .format(USER_NAME, USER_PASS)
                 )
                 db.execute(
-                    'DROP DATABASE IF EXISTS {0}'
+                    'DROP DATABASE IF EXISTS {0};'
                     .format(DB_NAME)
                 )
                 db.execute(
@@ -56,10 +73,10 @@ def configure_db():
         ) as db:
             db.execute(
                 'CREATE TABLE sessions ('
-                ' id SERIAL PRIMARY KEY,'
-                ' token CHAR(64),'
-                ' login CHAR(64),'
-                ' role_id INTEGER'
+                '  id SERIAL PRIMARY KEY,'
+                '  token CHAR(64),'
+                '  login CHAR(64),'
+                '  role_id INTEGER'
                 # TODO TTL
                 ');'
             )
@@ -103,7 +120,9 @@ def is_valid_token(token):
     """
     assert DB_CONN
     req = DB_CONN.prepare(  # TODO TTL
-        'SELECT exists (SELECT 1 FROM sessions WHERE token = $1 LIMIT 1);'
+        'SELECT exists ('
+        '  SELECT 1 FROM sessions WHERE token = $1 LIMIT 1'
+        ');'
     )
     res = req(token)
     return res[0][0]
@@ -117,7 +136,26 @@ def get_login_by_token(token):
     """
     assert DB_CONN
     req = DB_CONN.prepare(  # TODO TTL
-        'SELECT login FROM (SELECT login FROM sessions WHERE token = $1 LIMIT 1) AS res;'
+        'SELECT login FROM sessions WHERE token = $1 LIMIT 1;'
     )
     res = req(token)
     return res[0][0].strip()
+
+
+def remove_token(token):
+    assert DB_CONN
+    req = DB_CONN.prepare(
+        'DELETE FROM sessions WHERE token = $1;'
+    )
+    req(token)
+
+
+def _close_db():
+    """
+    For local use.
+    Close database connection stored globally.
+    """
+    DB_CONN.close()
+
+
+atexit.register(_close_db)
