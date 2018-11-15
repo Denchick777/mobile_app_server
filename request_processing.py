@@ -31,7 +31,7 @@ def try_login(data):
         login = data['login']
         password_hash = data['password_hash']
     except KeyError:
-        return _err_dict('Required field(s) missed')
+        return _err_dict('Required field(s) is/are missing')
     try:
         role_id = dc.try_authorize(login, password_hash)
     except dc.DataClusterQueryFailure as e:
@@ -102,7 +102,7 @@ def get_order_details(header, data):
     try:
         order_id = data['order_id']
     except KeyError:
-        return _err_dict('Required field missed')
+        return _err_dict('Required field is missing')
     try:
         order = dc.get_order_details(order_id)
     except dc.DataClusterQueryFailure as e:
@@ -126,7 +126,7 @@ def accept_order(header, data):
     try:
         order_id = data['order_id']
     except KeyError:
-        return _err_dict('Required field missed')
+        return _err_dict('Required field is missing')
     login = ldb.get_login_by_token(token)
     try:
         dc.try_order_accept(login, order_id)
@@ -152,7 +152,7 @@ def pick_order(header, data):
         order_id = data['order_id']
         key = data['key']
     except KeyError:
-        return _err_dict('Required field(s) missed')
+        return _err_dict('Required field(s) is missing')
     try:
         dc.try_pick_order(order_id, key)
     except dc.DataClusterQueryFailure as e:
@@ -176,7 +176,7 @@ def validate_customer(header, data):
     try:
         order_id = data['order_id']
     except KeyError:
-        return _err_dict('Required field missed')
+        return _err_dict('Required field is missing')
     try:
         dc.try_validate_customer(order_id)
     except dc.DataClusterQueryFailure as e:
@@ -201,7 +201,7 @@ def deliver_order(header, data):
         order_id = data['order_id']
         key = data['key']
     except KeyError:
-        return _err_dict('Required field(s) missed')
+        return _err_dict('Required field(s) is missing')
     try:
         dc.try_deliver_order(order_id, key)
     except dc.DataClusterQueryFailure as e:
@@ -225,7 +225,7 @@ def cancel_order(header, data):
     try:
         order_id = data['order_id']
     except KeyError:
-        return _err_dict('Required field missed')
+        return _err_dict('Required field is missing')
     try:
         dc.try_cancel_order(order_id)
     except dc.DataClusterQueryFailure as e:
@@ -249,7 +249,7 @@ def update_location(header, data):
     try:
         location = data['location']
     except KeyError:
-        return _err_dict('Required field missed')
+        return _err_dict('Required field is missing')
     try:
         latitude, longitude = map(float, location.split(';', maxsplit=1))
     except ValueError:
