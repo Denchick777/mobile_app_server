@@ -150,6 +150,20 @@ def get_login_by_token(token):
     return res[0][0].strip()
 
 
+def get_role_id_by_token(token):
+    """
+    Get `role_id` associated with a given session token.
+    :param token: Token to search user by
+    :return: `role_id` associated with a given token
+    """
+    assert DB_CONN
+    req = DB_CONN.prepare(
+        'SELECT role_id FROM sessions WHERE token = $1 LIMIT 1;'
+    )
+    res = req(token)
+    return res[0][0]
+
+
 def remove_token(token):
     assert DB_CONN
     req = DB_CONN.prepare(

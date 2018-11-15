@@ -55,8 +55,9 @@ def get_available_orders(header):
         return _err_dict('Token is missing')
     if not ldb.is_valid_token(token):
         return _err_dict('Invalid token')
+    role_id = ldb.get_role_id_by_token(token)
     try:
-        orders = dc.get_available_orders()
+        orders = dc.get_available_orders(role_id)
     except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return orders
@@ -78,8 +79,9 @@ def get_assigned_orders(header):
         login = ldb.get_login_by_token(token)
     except ldb.LocalDBQueryFailure as e:
         return _err_dict(str(e))
+    role_id = ldb.get_role_id_by_token(token)
     try:
-        orders = dc.get_assigned_orders(login)
+        orders = dc.get_assigned_orders(login, role_id)
     except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return orders
@@ -298,6 +300,7 @@ def plug_reset():  # TODO remove
     :return: Empty dictionary in case of success or dictionary with `error` field otherwise
     """
     try:
-        return dc.plug_reset()
+        dc.plug_reset()
     except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
+    return {}

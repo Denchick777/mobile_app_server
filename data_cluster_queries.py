@@ -29,6 +29,8 @@ ORDERS = [  # TODO remove
         'recipient_phone': '+7 (917) 923-43-84',
         'recipient_name': 'Denis Chernikov',
         'assigned_to': None,
+        'pick_key': '31337',
+        'validate_key': None,
     },
     {
         'order_id': '2',
@@ -48,6 +50,8 @@ ORDERS = [  # TODO remove
         'recipient_phone': '+7 (843) 203-92-53',
         'recipient_name': 'Sergey Masyagin',
         'assigned_to': None,
+        'pick_key': '31337',
+        'validate_key': None,
     },
     {
         'order_id': '3',
@@ -67,15 +71,17 @@ ORDERS = [  # TODO remove
         'recipient_phone': '+7 (999) 437-18-11',
         'recipient_name': 'Ivan Petrov',
         'assigned_to': 'abc',
+        'pick_key': '31337',
+        'validate_key': None,
     },
     {
         'order_id': '4',
         'title': 'Pallet #114',
         'weight': '0.418 kg',
         'dimensions': '2×1.65×2.1',
-        'state_code': '3',
+        'state_code': '0',
         'state': 'picked by delivery operator',
-        'order_type': '1',
+        'order_type': '3',
         'warehouse_address': 'Kazan, Tatarstan str., 137, room 115',
         'warehouse_id': '0',
         'recipient_address': 'Innopolis, Universitetskaya str., 1',
@@ -85,7 +91,9 @@ ORDERS = [  # TODO remove
         'delivery_time_to': '08/11/2018 15:45:00',
         'recipient_phone': '+7 (961) 044-86-18',
         'recipient_name': 'Boris Vasilenko',
-        'assigned_to': 'fizruk',
+        'assigned_to': None,
+        'pick_key': '31337',
+        'validate_key': None,
     },
 ]
 
@@ -141,12 +149,12 @@ def try_authorize(login, password_hash):
     return res['access_right_id']
 
 
-def get_available_orders():
-    return [el for el in ORDERS if not el['assigned_to']]  # TODO
+def get_available_orders(role_id):
+    return [el for el in ORDERS if not el['assigned_to'] and ((el['order_type'] == '3') ^ (role_id == 8))]  # TODO
 
 
-def get_assigned_orders(login):
-    return [el for el in ORDERS if el['assigned_to'] == login]  # TODO
+def get_assigned_orders(login, role_id):
+    return [el for el in ORDERS if el['assigned_to'] == login and ((el['order_type'] == '3') ^ (role_id == 8))]  # TODO
 
 
 def get_order_details(order_id):
@@ -163,45 +171,65 @@ def try_order_accept(login, order_id):
     i = 0  # TODO
     while i < len(ORDERS):
         if ORDERS[i]['order_id'] == order_id:
-            if ORDERS[i]['state_code'] == '1':
+            if ORDERS[i]['state_code'] != '0':
                 raise DataClusterQueryFailure('Given order is already accepted')
             ORDERS[i]['assigned_to'] = login
             ORDERS[i]['state_code'] = '1'
-            break
+            return
         i += 1
-    if i == len(ORDERS):
-        raise DataClusterQueryFailure('Order with given ID does not exist')
-    return {}  # TODO
+    raise DataClusterQueryFailure('Order with given ID does not exist')
 
 
 def try_pick_order(order_id, key):
-    if False:  # TODO
-        raise DataClusterQueryFailure('Order picking failed')
-    return {}  # TODO
+    i = 0  # TODO
+    while i < len(ORDERS):
+        if ORDERS[i]['order_id'] == order_id:
+            if ORDERS[i]['pick_key'] == key:
+                ORDERS[i]['state_code'] = '2'
+                return
+            raise DataClusterQueryFailure('Order picking failed')
+        i += 1
+    raise DataClusterQueryFailure('Order with given ID does not exist')
 
 
 def try_validate_customer(order_id):
-    if False:  # TODO
-        raise DataClusterQueryFailure('Customer validation failed')
-    return {}  # TODO
+    i = 0  # TODO
+    while i < len(ORDERS):
+        if ORDERS[i]['order_id'] == order_id:
+            ORDERS[i]['validate_key'] = '31337'  # TODO random
+        i += 1
+    raise DataClusterQueryFailure('Order with given ID does not exist')
 
 
 def try_deliver_order(order_id, key):
-    if False:  # TODO
-        raise DataClusterQueryFailure('Order deliver try failed')
-    return {}  # TODO
+    i = 0  # TODO
+    while i < len(ORDERS):
+        if ORDERS[i]['order_id'] == order_id:
+            if ORDERS[i]['validate_key'] == key:
+                ORDERS[i]['state_code'] = '3'
+                ORDERS[i]['assigned_to'] = None
+                return
+            raise DataClusterQueryFailure('Order delivery failed')
+        i += 1
+    raise DataClusterQueryFailure('Order with given ID does not exist')
 
 
 def try_cancel_order(order_id):
-    if False:  # TODO
-        raise DataClusterQueryFailure('Order cancellation failed')
-    return {}  # TODO
+    i = 0  # TODO
+    while i < len(ORDERS):
+        if ORDERS[i]['order_id'] == order_id:
+            if ORDERS[i]['state_code'] == '1':
+                ORDERS[i]['state_code'] = '0'
+                ORDERS[i]['assigned_to'] = None
+                return
+            raise DataClusterQueryFailure('Order cancellation failed')
+        i += 1
+    raise DataClusterQueryFailure('Order with given ID does not exist')
 
 
 def try_update_location(login, location):
-    if False:  # TODO
+    if False:  # TODO send to DC
         raise DataClusterQueryFailure('Location update failed')
-    return {}  # TODO
 
 
 def plug_reset():  # TODO remove
@@ -210,4 +238,3 @@ def plug_reset():  # TODO remove
         ORDERS[i]['assigned_to'] = None
     ORDERS[3]['state_code'] = '2'
     ORDERS[3]['assigned_to'] = 'abc'
-    return {}
