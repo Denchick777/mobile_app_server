@@ -317,4 +317,3 @@ def try_update_location(login, location):
     })
     if res['error'] != 'none':
         raise DataClusterQueryFailure('Location update failed')
-    return res['access_right_id']
