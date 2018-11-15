@@ -269,7 +269,6 @@ def try_deliver_order(order_id, key):
         if ORDERS[i]['order_id'] == order_id:
             if ORDERS[i]['validate_key'] == key:
                 ORDERS[i]['state_code'] = '3'
-                ORDERS[i]['assigned_to'] = None
                 return
             raise DataClusterQueryFailure('Order delivery failed')
         i += 1
