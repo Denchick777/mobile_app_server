@@ -4,10 +4,9 @@ Local database interface for server application.
 """
 
 import atexit
-import secrets
 import datetime
-
 import postgresql
+import secrets
 
 from local_config import configs
 
