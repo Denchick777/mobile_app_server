@@ -6,10 +6,10 @@ Server application core, implementing request interface using Flask.
 from flask import Flask, jsonify, request
 
 from local_config import configs
-import local_db
+from local_db import configure_db
 import request_processing as rp
 
-app = Flask(__name__)
+app = Flask('mobile_server_app')
 
 
 @app.route('/login', methods=['POST'])
@@ -67,11 +67,11 @@ def call_support():
     return jsonify(rp.get_support_phone_number(request.headers))
 
 
-@app.route('/plug_reset', methods=['POST'])
-def plug_reset():  # TODO remove
-    return jsonify(rp.plug_reset())
+@app.route('/logout', methods=['POST'])
+def logout():
+    return jsonify(rp.logout(request.headers))
 
 
 if __name__ == '__main__':
-    # local_db.configure_db()
+    configure_db()
     app.run(host='0.0.0.0', port=configs['SERVER_PORT'])
