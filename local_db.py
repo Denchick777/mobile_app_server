@@ -4,6 +4,9 @@ Local database interface for server application.
 """
 
 import atexit
+import secrets
+import datetime
+
 import postgresql
 
 from local_config import configs
@@ -76,8 +79,8 @@ def configure_db():
                 '  id SERIAL PRIMARY KEY,'
                 '  token CHAR(64),'
                 '  login CHAR(64),'
-                '  role_id INTEGER'
-                # TODO TTL
+                '  role_id INTEGER,'
+                '  expires TIMESTAMP(0)'
                 ');'
             )
         DB_CONN = postgresql.open(
@@ -85,15 +88,14 @@ def configure_db():
         )
 
 
-def _generate_token(user_name):
+def _generate_token():
     """
     For local use.
-    Generate almost unique session token associated with given user name.
+    Generate almost unique session token.
     NOTE: collision is very improbable, but still may occur.
-    :param user_name: User name to be used for creation
     :return: String with almost unique token value
     """
-    return f'new_access_token_for_{user_name}'  # TODO generate randomly
+    return secrets.token_hex(32)  # TODO implement own
 
 
 def store_user_auth(login, role_id):
@@ -104,11 +106,12 @@ def store_user_auth(login, role_id):
     :return: New token entry to be used within new session
     """
     assert DB_CONN
-    token = _generate_token(login)
-    req = DB_CONN.prepare(  # TODO TTL
-        'INSERT INTO sessions (token, login, role_id) VALUES ($1, $2, $3);'
+    token = _generate_token()
+    expires = datetime.datetime.now() + datetime.timedelta(seconds=5)
+    req = DB_CONN.prepare(
+        'INSERT INTO sessions (token, login, role_id, expires) VALUES ($1, $2, $3, $4);'
     )
-    req(token, login, role_id)
+    req(token, login, role_id, expires)
     return token
 
 
@@ -119,12 +122,15 @@ def is_valid_token(token):
     :return: `true` - it is valid and up-to-date, `false` - otherwise
     """
     assert DB_CONN
-    req = DB_CONN.prepare(  # TODO TTL
+    req = DB_CONN.prepare(
         'SELECT exists ('
-        '  SELECT 1 FROM sessions WHERE token = $1 LIMIT 1'
+        '  SELECT 1 FROM sessions'
+        '  WHERE token = $1 AND expires > current_timestamp LIMIT 1'
         ');'
     )
     res = req(token)
+    # TODO more efficient database garbage collection
+    DB_CONN.execute('DELETE FROM sessions WHERE expires <= current_timestamp;')
     return res[0][0]
 
 
@@ -135,7 +141,7 @@ def get_login_by_token(token):
     :return: `login` associated with a given token
     """
     assert DB_CONN
-    req = DB_CONN.prepare(  # TODO TTL
+    req = DB_CONN.prepare(
         'SELECT login FROM sessions WHERE token = $1 LIMIT 1;'
     )
     res = req(token)
