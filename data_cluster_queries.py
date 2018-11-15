@@ -162,7 +162,7 @@ def get_available_orders(role_id):
     :raises DataClusterQueryFailure: Data cluster responded with an error code
     :raises DataClusterQueryFailure: Data cluster returned non-JSON response
     """
-    return [el for el in ORDERS if not el['assigned_to'] and ((el['order_type'] == '3') ^ (role_id == 8))]  # TODO
+    return [el for el in ORDERS if not el['assigned_to'] and ((el['order_type'] == '3') ^ (role_id == 8))]  # TODO DC
 
 
 def get_assigned_orders(login):
@@ -173,7 +173,7 @@ def get_assigned_orders(login):
     :raises DataClusterQueryFailure: Data cluster responded with an error code
     :raises DataClusterQueryFailure: Data cluster returned non-JSON response
     """
-    return [el for el in ORDERS if el['assigned_to'] == login]  # TODO
+    return [el for el in ORDERS if el['assigned_to'] == login]  # TODO DC
 
 
 def get_order_details(order_id):
@@ -185,7 +185,7 @@ def get_order_details(order_id):
     :raises DataClusterQueryFailure: Data cluster returned non-JSON response
     :raises DataClusterQueryFailure: Order with given ID does not exist
     """
-    try:  # TODO
+    try:  # TODO DC
         return next(
             el for el in ORDERS
             if el['order_id'] == order_id
@@ -204,7 +204,7 @@ def try_order_accept(login, order_id):
     :raises DataClusterQueryFailure: Given order is already accepted
     :raises DataClusterQueryFailure: Order with given ID does not exist
     """
-    i = 0  # TODO
+    i = 0  # TODO DC
     while i < len(ORDERS):
         if ORDERS[i]['order_id'] == order_id:
             if ORDERS[i]['state_code'] != '0':
@@ -226,7 +226,7 @@ def try_pick_order(order_id, key):
     :raises DataClusterQueryFailure: Order picking failed
     :raises DataClusterQueryFailure: Order with given ID does not exist
     """
-    i = 0  # TODO
+    i = 0  # TODO DC
     while i < len(ORDERS):
         if ORDERS[i]['order_id'] == order_id:
             if ORDERS[i]['pick_key'] == key:
@@ -245,7 +245,7 @@ def try_validate_customer(order_id):
     :raises DataClusterQueryFailure: Data cluster returned non-JSON response
     :raises DataClusterQueryFailure: Order with given ID does not exist
     """
-    i = 0  # TODO
+    i = 0  # TODO DC
     while i < len(ORDERS):
         if ORDERS[i]['order_id'] == order_id:
             ORDERS[i]['validate_key'] = '31337'  # TODO random
@@ -263,7 +263,7 @@ def try_deliver_order(order_id, key):
     :raises DataClusterQueryFailure: Order delivery failed
     :raises DataClusterQueryFailure: Order with given ID does not exist
     """
-    i = 0  # TODO
+    i = 0  # TODO DC
     while i < len(ORDERS):
         if ORDERS[i]['order_id'] == order_id:
             if ORDERS[i]['validate_key'] == key:
@@ -284,7 +284,7 @@ def try_cancel_order(order_id):
     :raises DataClusterQueryFailure: Order cancellation failed
     :raises DataClusterQueryFailure: Order with given ID does not exist
     """
-    i = 0  # TODO
+    i = 0  # TODO DC
     while i < len(ORDERS):
         if ORDERS[i]['order_id'] == order_id:
             if ORDERS[i]['state_code'] == '1':
@@ -305,5 +305,5 @@ def try_update_location(login, location):
     :raises DataClusterQueryFailure: Data cluster returned non-JSON response
     :raises DataClusterQueryFailure: Location update failed
     """
-    if False:  # TODO send to DC
+    if False:  # TODO DC
         raise DataClusterQueryFailure('Location update failed')
