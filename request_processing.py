@@ -250,9 +250,19 @@ def update_location(header, data):
         location = data['location']
     except KeyError:
         return _err_dict('Required field missed')
-    login = ldb.get_login_by_token(token)
     try:
-        dc.try_update_location(login, location)
+        latitude, longitude = map(float, location.split(';', maxsplit=1))
+    except ValueError:
+        raise _err_dict('Wrong location data format')
+    role_id = ldb.get_role_id_by_token(token)
+    if role_id != 7:
+        return _err_dict('Location of truck drivers only considered')
+    try:
+        vehicle_id = int(token)  # TODO get_vehicle_id(token)
+    except ValueError:
+        return _err_dict('No vehicle ID found associated with given token')
+    try:
+        dc.try_update_location(vehicle_id, latitude, longitude)
     except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return {}

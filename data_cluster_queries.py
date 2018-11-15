@@ -296,22 +296,18 @@ def try_cancel_order(order_id):
     raise DataClusterQueryFailure('Order with given ID does not exist')
 
 
-def try_update_location(login, location):
+def try_update_location(vehicle_id, latitude, longitude):
     """
     Say to data cluster new geographical position of a given user.
-    :param login: Login of user to update position of
-    :param location: New geographical location of the given user
+    :param vehicle_id: Number of a vehicle in the database to update position of
+    :param latitude: Latitude part of new geographical coordinates
+    :param longitude: Longitude part of new geographical coordinates
     :raises DataClusterQueryFailure: Data cluster responded with an error code
     :raises DataClusterQueryFailure: Data cluster returned non-JSON response
-    :raises DataClusterQueryFailure: Wrong location data format
     :raises DataClusterQueryFailure: Location update failed
     """
-    try:
-        latitude, longitude = map(float, location.split(';', maxsplit=1))
-    except ValueError:
-        raise DataClusterQueryFailure('Wrong location data format')
     res = _ask_data_cluster('update_vehicle_location', {
-        'vehicle_id': login,  # TODO get_vehicle_id(login)
+        'vehicle_id': vehicle_id,
         'latitude': latitude,
         'longitude': longitude,
     })
