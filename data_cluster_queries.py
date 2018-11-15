@@ -249,6 +249,7 @@ def try_validate_customer(order_id):
     while i < len(ORDERS):
         if ORDERS[i]['order_id'] == order_id:
             ORDERS[i]['validate_key'] = '31337'  # TODO random
+            return
         i += 1
     raise DataClusterQueryFailure('Order with given ID does not exist')
 
