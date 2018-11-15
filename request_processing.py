@@ -79,9 +79,8 @@ def get_assigned_orders(header):
         login = ldb.get_login_by_token(token)
     except ldb.LocalDBQueryFailure as e:
         return _err_dict(str(e))
-    role_id = ldb.get_role_id_by_token(token)
     try:
-        orders = dc.get_assigned_orders(login, role_id)
+        orders = dc.get_assigned_orders(login)
     except dc.DataClusterQueryFailure as e:
         return _err_dict(str(e))
     return orders
@@ -113,7 +112,7 @@ def get_order_details(header, data):
 
 def accept_order(header, data):
     """
-    Set the state of a given order as accepted to the given user.
+    Set the state of a given order as accepted by the given user.
     :param header: Dictionary with `token` field
     :param data: Dictionary with `order_id` field
     :return: Empty dictionary in case of success or dictionary with `error` field otherwise

@@ -165,6 +165,10 @@ def get_role_id_by_token(token):
 
 
 def remove_token(token):
+    """
+    Close session associated with a given token and remove the corresponding database record.
+    :param token: Token to close session for
+    """
     assert DB_CONN
     req = DB_CONN.prepare(
         'DELETE FROM sessions WHERE token = $1;'
