@@ -72,11 +72,6 @@ def logout():
     return jsonify(rp.logout(request.headers))
 
 
-@app.route('/plug_reset', methods=['POST'])
-def plug_reset():  # TODO remove
-    return jsonify(rp.plug_reset())
-
-
 if __name__ == '__main__':
     configure_db()
     app.run(host='0.0.0.0', port=configs['SERVER_PORT'])

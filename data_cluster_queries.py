@@ -230,11 +230,3 @@ def try_cancel_order(order_id):
 def try_update_location(login, location):
     if False:  # TODO send to DC
         raise DataClusterQueryFailure('Location update failed')
-
-
-def plug_reset():  # TODO remove
-    for i in range(len(ORDERS)):
-        ORDERS[i]['state_code'] = '0'
-        ORDERS[i]['assigned_to'] = None
-    ORDERS[3]['state_code'] = '2'
-    ORDERS[3]['assigned_to'] = 'abc'

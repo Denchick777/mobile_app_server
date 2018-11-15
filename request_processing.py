@@ -291,16 +291,3 @@ def logout(header):
     except ldb.LocalDBQueryFailure as e:
         return _err_dict(e)
     return {}
-
-
-def plug_reset():  # TODO remove
-    """
-    DEBUG FEATURE.
-    Reset some fields for testing purposes.
-    :return: Empty dictionary in case of success or dictionary with `error` field otherwise
-    """
-    try:
-        dc.plug_reset()
-    except dc.DataClusterQueryFailure as e:
-        return _err_dict(str(e))
-    return {}
