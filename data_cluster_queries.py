@@ -311,7 +311,7 @@ def try_update_location(login, location):
     except ValueError:
         raise DataClusterQueryFailure('Wrong location data format')
     res = _ask_data_cluster('update_vehicle_location', {
-        'login': login,  # TODO vehicle_id
+        'vehicle_id': login,  # TODO get_vehicle_id(login)
         'latitude': latitude,
         'longitude': longitude,
     })
