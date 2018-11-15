@@ -303,7 +303,18 @@ def try_update_location(login, location):
     :param location: New geographical location of the given user
     :raises DataClusterQueryFailure: Data cluster responded with an error code
     :raises DataClusterQueryFailure: Data cluster returned non-JSON response
+    :raises DataClusterQueryFailure: Wrong location data format
     :raises DataClusterQueryFailure: Location update failed
     """
-    if False:  # TODO DC
+    try:
+        latitude, longitude = map(float, location.split(';', maxsplit=1))
+    except ValueError:
+        raise DataClusterQueryFailure('Wrong location data format')
+    res = _ask_data_cluster('update_vehicle_location', {
+        'login': login,  # TODO vehicle_id
+        'latitude': latitude,
+        'longitude': longitude,
+    })
+    if res['error'] != 'none':
         raise DataClusterQueryFailure('Location update failed')
+    return res['access_right_id']
