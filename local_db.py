@@ -18,6 +18,8 @@ USER_PASS = configs['USER_PASS']
 
 DB_CONN = None
 
+TTL = datetime.timedelta(hours=12)
+
 
 class LocalDBQueryFailure(Exception):
     """
@@ -107,7 +109,7 @@ def store_user_auth(login, role_id):
     """
     assert DB_CONN
     token = _generate_token()
-    expires = datetime.datetime.now() + datetime.timedelta(seconds=5)
+    expires = datetime.datetime.now() + TTL
     req = DB_CONN.prepare(
         'INSERT INTO sessions (token, login, role_id, expires) VALUES ($1, $2, $3, $4);'
     )
